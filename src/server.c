@@ -6202,13 +6202,22 @@ int main(int argc, char **argv) {
 #ifdef INIT_SETPROCTITLE_REPLACEMENT
     spt_init(argc, argv);
 #endif
+    // 设置时区
     setlocale(LC_COLLATE,"");
+    // UNIX时间兼容函数
     tzset(); /* Populates 'timezone' global. */
+    // 设置oom发生时的函数指针，函数指针指向一个函数，类似于java 8中，lambda表达式中，丢一个方法的引用给流；函数指针会在oom时，被回调，总体来说，就类似于java中的模板设计模式或者策略模式。
     zmalloc_set_oom_handler(redisOutOfMemoryHandler);
+    // 设置随机数的种子
     srand(time(NULL)^getpid());
+    // 同样设置随机数的种子
     srandom(time(NULL)^getpid());
+    // 获取当前时间，设置到 tv这个变量中
+    // 注意，这里把tv的地址传进去了，这是c语言中典型的用法，类似于java中传一个对象的引用进去，然后在方法内部，会修改该对象的内部field等
     gettimeofday(&tv,NULL);
+    // 设置hash函数的种子
     init_genrand64(((long long) tv.tv_sec * 1000000 + tv.tv_usec) ^ getpid());
+    // 初始化16KB的查找表
     crc64_init();
 
     /* Store umask value. Because umask(2) only offers a set-and-get API we have

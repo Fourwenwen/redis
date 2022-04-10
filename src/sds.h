@@ -42,17 +42,26 @@ extern const char *SDS_NOINIT;
 
 typedef char *sds;
 
+/**
+ * SDS 之所以设计不同的结构头（即不同类型），是为了能灵活保存不同大小的字符串，从而有效节省内存空间。
+ * __attribute__ ((__packed__))的作用就是告诉编译器，
+ * 在编译 sdshdr8 结构时，不要使用字节对齐的方式，而是采用紧凑的方式分配内存。
+ * 这是因为在默认情况下，编译器会按照 8 字节对齐的方式，给变量分配内存。
+ * 也就是说，即使一个变量的大小不到 8 个字节，编译器也会给它分配 8 个字节。
+ */
 /* Note: sdshdr5 is never used, we just access the flags byte directly.
  * However is here to document the layout of type 5 SDS strings. */
+// 从不是用过的，只是作为一个标志而已
 struct __attribute__ ((__packed__)) sdshdr5 {
     unsigned char flags; /* 3 lsb of type, and 5 msb of string length */
     char buf[];
 };
+// 当字符串类型是 sdshdr8 时，它能表示的字符数组长度（包括数组最后一位\0）不会超过 256 字节（2 的 8 次方等于 256）
 struct __attribute__ ((__packed__)) sdshdr8 {
-    uint8_t len; /* used */
-    uint8_t alloc; /* excluding the header and null terminator */
-    unsigned char flags; /* 3 lsb of type, 5 unused bits */
-    char buf[];
+    uint8_t len; /* used | 字符数组现有长度 */
+    uint8_t alloc; /* excluding the header and null terminator | 字符数组的已分配空间，不包括结构体和\0结束字符 */
+    unsigned char flags; /* 3 lsb of type, 5 unused bits | SDS类型 */
+    char buf[]; /*字符数组*/
 };
 struct __attribute__ ((__packed__)) sdshdr16 {
     uint16_t len; /* used */

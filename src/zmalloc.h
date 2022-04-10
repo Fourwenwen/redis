@@ -27,6 +27,9 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
+/**
+ * Redis 把对内存分配器的封装
+ */
 
 #ifndef __ZMALLOC_H
 #define __ZMALLOC_H

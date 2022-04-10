@@ -27,6 +27,9 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
+/**
+ * Redis 对 TCP 网络通信的 Socket 连接
+ * **/
 
 #include "fmacros.h"
 

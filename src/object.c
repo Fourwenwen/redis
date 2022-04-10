@@ -153,6 +153,7 @@ robj *createStringObjectFromLongLongWithOptions(long long value, int valueobj) {
     {
         /* If the maxmemory policy permits, we can still return shared integers
          * even if valueobj is true. */
+        // 如果maxmemory策略允许，即使valueobj为真，我们仍然可以返回共享整数。
         valueobj = 0;
     }
 
@@ -181,6 +182,12 @@ robj *createStringObjectFromLongLong(long long value) {
  * object when LFU/LRU info are needed, that is, when the object is used
  * as a value in the key space, and Redis is configured to evict based on
  * LFU/LRU. */
+/**
+ * createStringObjectFromLongLongWithOptions()的封装器，
+ * 当需要LFU/LRU信息时避免共享对象，也就是说，当对象被用作键空间的值时，Redis被配置为基于LFU/LRU进行驱逐。
+ * @param value
+ * @return
+ */
 robj *createStringObjectFromLongLongForValue(long long value) {
     return createStringObjectFromLongLongWithOptions(value,1);
 }
@@ -435,6 +442,7 @@ void trimStringObjectIfNeeded(robj *o) {
 }
 
 /* Try to encode a string object in order to save space */
+/* 尝试对字符串对象进行编码以节省空间 */
 robj *tryObjectEncoding(robj *o) {
     long value;
     sds s = o->ptr;
@@ -444,39 +452,64 @@ robj *tryObjectEncoding(robj *o) {
      * in this function. Other types use encoded memory efficient
      * representations but are handled by the commands implementing
      * the type. */
+    /**
+     * 确保这是一个字符串对象，这是我们在这个函数中编码的唯一类型。
+     * 其他类型使用编码的内存高效表示，但由实现该类型的命令处理。
+     */
     serverAssertWithInfo(NULL,o,o->type == OBJ_STRING);
 
     /* We try some specialized encoding only for objects that are
      * RAW or EMBSTR encoded, in other words objects that are still
      * in represented by an actually array of chars. */
+    /**
+     * 我们只对 RAW 或 EMBSTR 编码的对象尝试一些专门的编码，换句话说，仍然由实际的字符数组表示的对象。
+     * 判断是否为RAW或EMBSTR，否则不用编码直接返回
+     */
     if (!sdsEncodedObject(o)) return o;
 
     /* It's not safe to encode shared objects: shared objects can be shared
      * everywhere in the "object space" of Redis and may end in places where
      * they are not handled. We handle them only as values in the keyspace. */
+    /**
+     * 对共享对象进行编码是不安全的：共享对象可以在 Redis 的“对象空间”中的任何地方共享，并且可能在它们未被处理的地方结束。 我们仅将它们作为键空间中的值处理。
+     * 已经在其他地方引用，想必也不用再编码
+     */
      if (o->refcount > 1) return o;
 
     /* Check if we can represent this string as a long integer.
      * Note that we are sure that a string larger than 20 chars is not
      * representable as a 32 nor 64 bit integer. */
+    /**
+     * 检查我们是否可以把这个字符串表示成一个长整数。
+请注意，我们确信一个大于20个字符的字符串是不能作为一个32位或64位的整数来表示的。
+     因为long最大表示的数字是9223372036854775807。就是说64位最多就是19个字符。
+     因为int最大表示的数字是2147483647。就是32位的最多就是10个字符串
+     */
     len = sdslen(s);
     if (len <= 20 && string2l(s,len,&value)) {
-        /* This object is encodable as a long. Try to use a shared object.
-         * Note that we avoid using shared integers when maxmemory is used
-         * because every object needs to have a private LRU field for the LRU
-         * algorithm to work well. */
+        /* 这个对象可被编码为long。尝试使用共享对象。
+         * 注意，当使用maxmemory时，我们避免使用共享的整数，
+         * 因为每个对象都需要有一个私有的LRU字段，以便LRU算法能够很好地工作。
+         * */
+        // 没有过期策略并且数字是0到9999的，可以尝试用共享对象
         if ((server.maxmemory == 0 ||
             !(server.maxmemory_policy & MAXMEMORY_FLAG_NO_SHARED_INTEGERS)) &&
             value >= 0 &&
             value < OBJ_SHARED_INTEGERS)
         {
+            // 释放掉对象
             decrRefCount(o);
+            // 共享对象引用加1
             incrRefCount(shared.integers[value]);
             return shared.integers[value];
         } else {
+            // raw
             if (o->encoding == OBJ_ENCODING_RAW) {
+                // 释放掉指针指向的内存
                 sdsfree(o->ptr);
+                // int类型
                 o->encoding = OBJ_ENCODING_INT;
+                // ptr直接指向value
                 o->ptr = (void*) value;
                 return o;
             } else if (o->encoding == OBJ_ENCODING_EMBSTR) {

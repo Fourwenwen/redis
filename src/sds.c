@@ -112,6 +112,7 @@ sds _sdsnewlen(const void *init, size_t initlen, int trymalloc) {
     size_t usable;
 
     assert(initlen + hdrlen + 1 > initlen); /* Catch size_t overflow */
+    //新建SDS结构，并分配内存空间
     sh = trymalloc?
         s_trymalloc_usable(hdrlen+initlen+1, &usable) :
         s_malloc_usable(hdrlen+initlen+1, &usable);
@@ -120,6 +121,7 @@ sds _sdsnewlen(const void *init, size_t initlen, int trymalloc) {
         init = NULL;
     else if (!init)
         memset(sh, 0, hdrlen+initlen+1);
+    //sds类型变量指向SDS结构体中的buf数组，sh指向SDS结构体起始位置，hdrlen是SDS结构体中元数据的长度
     s = (char*)sh+hdrlen;
     fp = ((unsigned char*)s)-1;
     usable = usable-hdrlen-1;
@@ -160,7 +162,9 @@ sds _sdsnewlen(const void *init, size_t initlen, int trymalloc) {
         }
     }
     if (initlen && init)
+        //将要传入的字符串拷贝给sds变量s
         memcpy(s, init, initlen);
+    //变量s末尾增加\0，表示字符串结束
     s[initlen] = '\0';
     return s;
 }
@@ -429,13 +433,24 @@ sds sdsgrowzero(sds s, size_t len) {
  *
  * After the call, the passed sds string is no longer valid and all the
  * references must be substituted with the new pointer returned by the call. */
+/**
+ * 字符串追加操作
+ * @param s 目标字符串
+ * @param t 源字符串
+ * @param len 追加的长度
+ * @return
+ */
 sds sdscatlen(sds s, const void *t, size_t len) {
+    // //获取目标字符串s的当前长度
     size_t curlen = sdslen(s);
-
+    //根据要追加的长度len和目标字符串s的现有长度，判断是否要增加新的空间
     s = sdsMakeRoomFor(s,len);
     if (s == NULL) return NULL;
+    //将源字符串t中len长度的数据拷贝到目标字符串结尾
     memcpy(s+curlen, t, len);
+    //设置目标字符串的最新长度：拷贝前长度curlen加上拷贝长度
     sdssetlen(s, curlen+len);
+    //拷贝后，在目标字符串结尾加上\0
     s[curlen+len] = '\0';
     return s;
 }

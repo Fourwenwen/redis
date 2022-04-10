@@ -155,6 +155,7 @@ void setGenericCommand(client *c, int flags, robj *key, robj *val, robj *expire,
 /*
  * The parseExtendedStringArgumentsOrReply() function performs the common validation for extended
  * string arguments used in SET and GET command.
+ * parseExtendedStringArgumentsOrReply() 函数执行扩展的通用验证SET 和 GET 命令中使用的字符串参数。
  *
  * Get specific commands - PERSIST/DEL
  * Set specific commands - XX/NX/GET

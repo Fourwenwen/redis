@@ -26,6 +26,9 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
+/**
+ * 对键值对的新增、查询、修改和删除等操作接口
+ */
 
 #include "server.h"
 #include "cluster.h"

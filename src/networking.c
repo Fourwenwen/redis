@@ -26,6 +26,9 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
+/**
+ * 客户端的设计与实现
+ **/
 
 #include "server.h"
 #include "atomicvar.h"
